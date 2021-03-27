@@ -6,6 +6,20 @@ function formReset() {
     FORM.reset();
 }
 
+function dados() {
+    return {
+        NOME: NOME.value,
+        UF: UF.value,
+        OBSERVACAO: OBSERVACAO.value
+    };
+}
+
+function setDados($DADOS) {
+    NOME.value = $DADOS.NOME;
+    UF.value = $DADOS.UF;
+    OBSERVACAO.value = $DADOS.OBSERVACAO;
+}
+
 function listar() {
     formReset();
 
@@ -23,8 +37,8 @@ function listar() {
             if ($LISTA.length > 0) {
                 for (var $dado of $LISTA) {
                     tr += '<tr>';
-                    tr += ' <td>' + $dado.ID_PESSOA + '</td>';
-                    tr += ' <td>' + $dado.NOME + '</td>';
+                    tr += ' <td class="sublinhadoPontilhado" title="Observação: ' + $dado.OBSERVACAO + '">' + $dado.NOME + '</td>';
+                    tr += ' <td>' + $dado.UF + '</td>';
                     tr += ' <td> ';
                     tr += '  <button onclick="editar(' + $dado.ID_PESSOA + ')">Editar</button>';
                     tr += '  <button descricao="' + $dado.NOME + '" onclick="excluir(' + $dado.ID_PESSOA + ',this)">Excluir</button>';
@@ -44,10 +58,8 @@ function listar() {
 
 function incluir() {
 
-    var $_POST = {
-        ACAO: 'Incluir',
-        NOME: NOME.value
-    };
+    var $_POST = dados();
+    $_POST.ACAO = 'Incluir';
 
     var ajax = new XMLHttpRequest();
     ajax.open('POST', 'ajax.php');
@@ -117,8 +129,7 @@ function editar(id) {
         var $RETORNO = JSON.parse(ajax.responseText);
         var $DADO = $RETORNO.dado;
         if ($RETORNO.status == 'ok') {
-            //Dados
-            NOME.value = $DADO.NOME;
+            setDados($DADO);
 
             //Estrutura
             ACAO_TITULO.innerHTML = 'Alterar'
@@ -137,11 +148,9 @@ function editar(id) {
 
 function alterar(id) {
 
-    var $_POST = {
-        ACAO: 'Alterar',
-        ID_PESSOA: id,
-        NOME: NOME.value
-    };
+    var $_POST = dados();
+    $_POST.ACAO = 'Alterar';
+    $_POST.ID_PESSOA = id;
 
     var ajax = new XMLHttpRequest();
     ajax.open('POST', 'ajax.php');

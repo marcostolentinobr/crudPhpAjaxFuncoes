@@ -1,6 +1,6 @@
 # Exemplo de CRUD com PHP e Ajax com funções
 
-Projeto voltado a fazer um crud fácil e simples com ajax com funcções separadas
+Projeto voltado a fazer um crud fácil e simples com ajax com funcões separadas
 
 ## Requisitos
 

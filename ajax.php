@@ -41,7 +41,6 @@ function listar($CONSULTA = []) {
     global $PDO;
 
     $whereExecute = whereExecute($CONSULTA);
-
     $sql = "SELECT * FROM PESSOA $whereExecute[where] ORDER BY NOME";
     $prepare = $PDO->prepare($sql);
     $prepare->execute($whereExecute['execute']);
@@ -55,7 +54,9 @@ function incluir($DADOS) {
     global $PDO;
 
     $prepare = $PDO->prepare('
-        INSERT INTO PESSOA (NOME) VALUES (:NOME)
+        INSERT INTO PESSOA 
+            ( NOME, UF, OBSERVACAO) VALUES 
+            (:NOME,:UF,:OBSERVACAO)
     ');
 
     return $prepare->execute($DADOS);
@@ -77,10 +78,21 @@ function alterar($DADOS) {
     global $PDO;
 
     $prepare = $PDO->prepare('
-        UPDATE PESSOA SET NOME = :NOME WHERE ID_PESSOA = :ID_PESSOA
+        UPDATE PESSOA SET NOME = :NOME, 
+                            UF = :UF,
+                    OBSERVACAO = :OBSERVACAO
+         WHERE ID_PESSOA = :ID_PESSOA
     ');
 
     return $prepare->execute($DADOS);
+}
+
+function dados() {
+    return [
+        'NOME' => $_POST['NOME'],
+        'UF' => $_POST['UF'],
+        'OBSERVACAO' => $_POST['OBSERVACAO']
+    ];
 }
 
 //RETORNO - inicio
@@ -116,13 +128,11 @@ try {
         $retorno['status'] = 'erro';
         $retorno['mensagem'] = "$_POST[NOME] já existe";
 
-        $DADOS = [
-            'NOME' => $_POST['NOME']
-        ];
-        $DADO = listar($DADOS);
-
-        if (!$DADO) {
+        $existeDado = listar(['NOME' => $_POST['NOME']]);
+        if (!$existeDado) {
+            $DADOS = dados();
             $execute = incluir($DADOS);
+
             $retorno['status'] = 'ok';
             $retorno['mensagem'] = "$_POST[NOME] incluído(a)";
         }
@@ -131,19 +141,14 @@ try {
     elseif (@$_POST['ACAO'] == 'Excluir') {
         $retorno['status'] = 'ok';
         $retorno['mensagem'] = "$_POST[descricao] excluído(a)";
-
-        $execute = excluir([
-            'ID_PESSOA' => $_POST['ID_PESSOA']
-        ]);
+        $execute = excluir(['ID_PESSOA' => $_POST['ID_PESSOA']]);
     }
     //Consulta
     elseif (@$_POST['ACAO'] == 'Buscar') {
         $retorno['status'] = 'ok';
         $retorno['mensagem'] = 'Pessoa listada';
 
-        $DADO = listar([
-            'ID_PESSOA' => $_POST['ID_PESSOA']
-        ]);
+        $DADO = listar(['ID_PESSOA' => $_POST['ID_PESSOA']]);
         $retorno['dado'] = $DADO[0];
 
         if (!$DADO) {
@@ -156,19 +161,14 @@ try {
         $retorno['status'] = 'erro';
         $retorno['mensagem'] = "$_POST[NOME] já existe";
 
-        $DADOS = [
-            'NOME' => @$_POST['NOME']
-        ];
-        $DADO = @listar($DADOS)[0];
-
+        $DADO = @listar(['NOME' => $_POST['NOME']])[0];
         if (!$DADO || $DADO['ID_PESSOA'] == $_POST['ID_PESSOA']) {
-            $execute = alterar([
-                ':NOME' => $_POST['NOME'],
-                ':ID_PESSOA' => $_POST['ID_PESSOA']
-            ]);
-
             $retorno['status'] = 'ok';
             $retorno['mensagem'] = "$_POST[NOME] alterado(a)";
+
+            $DADOS = dados();
+            $DADOS['ID_PESSOA'] = $_POST['ID_PESSOA'];
+            $execute = alterar($DADOS);
         }
     }
 } catch (Exception $ex) {

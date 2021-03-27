@@ -1,4 +1,19 @@
 <meta charset="utf8">
+
+<style>
+    label {
+        font-weight: bold;
+        display: block;
+    }
+    select, textarea {
+        width: 173px;        
+    }
+    .sublinhadoPontilhado {
+        text-decoration: underline; 
+        text-decoration-style: dotted; 
+        cursor: pointer;
+    }
+</style>
 <center>
     <h3 id="ACAO_MSG_OK" style="color: green"></h3>
     <h3 id="ACAO_MSG_ERRO" style="color: red"></h3>
@@ -9,9 +24,9 @@
                 <table border="1" style="width: 100%">
                     <thead>
                         <tr>
-                            <th>ID</th>
                             <th>NOME</th>
-                            <th>Ações</th>
+                            <th style="width: 1%">UF</th>
+                            <th style="width: 1%">Ações</th>
                         </tr>                        
                     </thead>
                     <tbody id="TBODY">
@@ -19,12 +34,30 @@
                     </tbody>
                 </table>
             </td>
-            <td style="text-align: center">
-                <h3 id="ACAO_TITULO">Incluir</h3> 
+            <td style="padding-left: 10px">
+                <h3 id="ACAO_TITULO" style="text-align: center">Incluir</h3> 
                 <form id="FORM" method='POST' onsubmit="return incluir()">
+
+                    <!-- NOME -->
+                    <label for="NOME">Nome:</label>
                     <input id="NOME" maxlength="100" required><br>
+
+                    <!-- UF -->
+                    <label for="UF">UF:</label>
+                    <select id="UF" required>
+                        <option></option>
+                        <option value="SC">SC</option>
+                        <option value="OU">Outro</option>
+                    </select><br>
+
+                    <!-- OBSERVAÇÃO -->
+                    <label style="font-weight: normal">Observação:</label>
+                    <textarea maxlength="1000" style="height: 100px" id="OBSERVACAO"></textarea>
+
+                    <hr>
                     <input id="ACAO" type="submit" value="Incluir">
                     <input type="button" value="Cancelar" onclick="formReset()">
+
                 </form>
             </td>
         </tr>
