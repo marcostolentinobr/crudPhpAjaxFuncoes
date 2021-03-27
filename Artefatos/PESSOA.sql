@@ -1,0 +1,11 @@
+
+CREATE TABLE PESSOA (
+                ID_PESSOA BIGINT AUTO_INCREMENT NOT NULL,
+                NOME VARCHAR(100) NOT NULL,
+                PRIMARY KEY (ID_PESSOA)
+);
+
+
+CREATE UNIQUE INDEX pessoa_idx
+ ON PESSOA
+ ( NOME );
