@@ -17,36 +17,76 @@ function pr($dado, $print_r = true) {
     }
 }
 
-function listar($id = '', $NOME = '') {
-    global $PDO;
+function whereExecute($CONSULTA) {
+    $retorno = [
+        'where' => '',
+        'execute' => [],
+    ];
 
     $WHERE = [];
-    $EXECUTE = [];
-    if ($id) {
-        $WHERE[] = ' ID_PESSOA = :ID_PESSOA ';
-        $EXECUTE[':ID_PESSOA'] = $id;
-    }
-    if ($NOME) {
-        $WHERE[] = ' NOME = :NOME ';
-        $EXECUTE[':NOME'] = $NOME;
-    }
-    $where = '';
-    if ($WHERE) {
-        $where = ' WHERE ' . implode(' AND ', $WHERE);
+    foreach ($CONSULTA as $coluna => $valor) {
+        $retorno['execute'][":$coluna"] = $valor;
+        $WHERE[] = " $coluna = :$coluna";
     }
 
-    $sql = "SELECT * FROM PESSOA $where ORDER BY NOME";
+    if ($WHERE) {
+        $retorno['where'] = ' WHERE ' . implode(' AND ', $WHERE);
+    }
+
+    return $retorno;
+}
+
+//LISCAR
+function listar($CONSULTA = []) {
+    global $PDO;
+
+    $whereExecute = whereExecute($CONSULTA);
+
+    $sql = "SELECT * FROM PESSOA $whereExecute[where] ORDER BY NOME";
     $prepare = $PDO->prepare($sql);
-    $prepare->execute($EXECUTE);
+    $prepare->execute($whereExecute['execute']);
 
     $DADOS = $prepare->fetchAll(PDO::FETCH_ASSOC);
     return $DADOS;
 }
 
+//INCLUIR
+function incluir($DADOS) {
+    global $PDO;
+
+    $prepare = $PDO->prepare('
+        INSERT INTO PESSOA (NOME) VALUES (:NOME)
+    ');
+
+    return $prepare->execute($DADOS);
+}
+
+//EXCLUIR
+function excluir($DADOS) {
+    global $PDO;
+
+    $prepare = $PDO->prepare('
+        DELETE FROM PESSOA WHERE ID_PESSOA = :ID_PESSOA
+    ');
+
+    return $prepare->execute($DADOS);
+}
+
+//ALTERAR
+function alterar($DADOS) {
+    global $PDO;
+
+    $prepare = $PDO->prepare('
+        UPDATE PESSOA SET NOME = :NOME WHERE ID_PESSOA = :ID_PESSOA
+    ');
+
+    return $prepare->execute($DADOS);
+}
+
 //RETORNO - inicio
 $retorno = [
     'status' => 'erro',
-    'mensagem' => 'Ação não identificada',
+    'mensagem' => 'Ação não confirmada',
     'lista' => [],
     'dado' => ''
 ];
@@ -65,45 +105,47 @@ try {
 
     //LISTAR
     if (@$_POST['ACAO'] == 'Listar') {
-        $DADOS = listar();
         $retorno['status'] = 'ok';
         $retorno['mensagem'] = 'Pessoas listadas';
-        $retorno['lista'] = @$DADOS;
+
+        $DADOS = listar();
+        $retorno['lista'] = $DADOS;
     }
     //INCLUIR
     elseif (@$_POST['ACAO'] == 'Incluir') {
-        $prepare = $PDO->prepare('
-            INSERT INTO PESSOA (NOME) VALUES (:NOME)
-        ');
-        $DADO = @listar('', @$_POST['NOME'])[0];
-        if ($DADO) {
-            $retorno['status'] = 'erro';
-            $retorno['mensagem'] = "$_POST[NOME] já existe";
-        } else {
-            $prepare->execute([
-                ':NOME' => @$_POST['NOME']
-            ]);
+        $retorno['status'] = 'erro';
+        $retorno['mensagem'] = "$_POST[NOME] já existe";
+
+        $DADOS = [
+            'NOME' => $_POST['NOME']
+        ];
+        $DADO = listar($DADOS);
+
+        if (!$DADO) {
+            $execute = incluir($DADOS);
             $retorno['status'] = 'ok';
             $retorno['mensagem'] = "$_POST[NOME] incluído(a)";
         }
     }
     //EXCLUIR
     elseif (@$_POST['ACAO'] == 'Excluir') {
-        $prepare = $PDO->prepare('
-            DELETE FROM PESSOA WHERE ID_PESSOA = :ID_PESSOA
-        ');
-        $prepare->execute([
-            ':ID_PESSOA' => @$_POST['ID_PESSOA']
-        ]);
         $retorno['status'] = 'ok';
         $retorno['mensagem'] = "$_POST[descricao] excluído(a)";
+
+        $execute = excluir([
+            'ID_PESSOA' => $_POST['ID_PESSOA']
+        ]);
     }
     //Consulta
     elseif (@$_POST['ACAO'] == 'Buscar') {
-        $DADO = listar(@$_POST['ID_PESSOA']);
         $retorno['status'] = 'ok';
         $retorno['mensagem'] = 'Pessoa listada';
+
+        $DADO = listar([
+            'ID_PESSOA' => $_POST['ID_PESSOA']
+        ]);
         $retorno['dado'] = $DADO[0];
+
         if (!$DADO) {
             $retorno['status'] = 'erro';
             $retorno['mensagem'] = 'Pessoa não localizada';
@@ -111,15 +153,23 @@ try {
     }
     //ALTERAR
     elseif (@$_POST['ACAO'] == 'Alterar') {
-        $prepare = $PDO->prepare('
-            UPDATE PESSOA SET NOME = :NOME WHERE ID_PESSOA = :ID_PESSOA
-        ');
-        $prepare->execute([
-            ':NOME' => $_POST['NOME'],
-            ':ID_PESSOA' => $_POST['ID_PESSOA']
-        ]);
-        $retorno['status'] = 'ok';
-        $retorno['mensagem'] = "$_POST[NOME] alterado(a)";
+        $retorno['status'] = 'erro';
+        $retorno['mensagem'] = "$_POST[NOME] já existe";
+
+        $DADOS = [
+            'NOME' => @$_POST['NOME']
+        ];
+        $DADO = @listar($DADOS)[0];
+
+        if (!$DADO || $DADO['ID_PESSOA'] == $_POST['ID_PESSOA']) {
+            $execute = alterar([
+                ':NOME' => $_POST['NOME'],
+                ':ID_PESSOA' => $_POST['ID_PESSOA']
+            ]);
+
+            $retorno['status'] = 'ok';
+            $retorno['mensagem'] = "$_POST[NOME] alterado(a)";
+        }
     }
 } catch (Exception $ex) {
     $retorno = [

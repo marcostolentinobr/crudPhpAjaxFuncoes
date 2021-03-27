@@ -1,3 +1,4 @@
+<meta charset="utf8">
 <center>
     <h3 id="ACAO_MSG_OK" style="color: green"></h3>
     <h3 id="ACAO_MSG_ERRO" style="color: red"></h3>
@@ -22,7 +23,8 @@
                 <h3 id="ACAO_TITULO">Incluir</h3> 
                 <form id="FORM" method='POST' onsubmit="return incluir()">
                     <input id="NOME" maxlength="100" required><br>
-                    <input id="ACAO" type="submit" value="Salvar">
+                    <input id="ACAO" type="submit" value="Incluir">
+                    <input type="button" value="Cancelar" onclick="formReset()">
                 </form>
             </td>
         </tr>
@@ -31,7 +33,16 @@
 
 <script>
 
+
+    function formReset() {
+        ACAO_TITULO.innerHTML = 'Incluir'
+        ACAO.value = 'Incluir'
+        FORM.setAttribute('onsubmit', 'return incluir()');
+        FORM.reset();
+    }
+
     function listar() {
+        formReset();
 
         var $_POST = {
             ACAO: 'Listar'
@@ -67,7 +78,7 @@
     }
 
     function incluir() {
-
+        
         var $_POST = {
             ACAO: 'Incluir',
             NOME: NOME.value
@@ -82,9 +93,6 @@
                 //Mensagem
                 ACAO_MSG_OK.textContent = $RETORNO.mensagem;
                 ACAO_MSG_ERRO.textContent = '';
-
-                //Estrutura
-                FORM.reset();
 
                 //Listar
                 listar();
@@ -149,6 +157,7 @@
 
                 //Estrutura
                 ACAO_TITULO.innerHTML = 'Alterar'
+                ACAO.value = 'Alterar'
                 FORM.setAttribute('onsubmit', 'return alterar(' + $DADO.ID_PESSOA + ')');
 
             } else {
@@ -174,12 +183,7 @@
         ajax.onload = function () {
             var $RETORNO = JSON.parse(ajax.responseText);
             if ($RETORNO.status == 'ok') {
-                FORM.reset();
-
-                //Estrutura
-                ACAO_TITULO.innerHTML = 'Incluir'
-                FORM.setAttribute('onsubmit', 'return incluir()');
-
+                
                 //Mensagem
                 ACAO_MSG_OK.textContent = $RETORNO.mensagem;
                 ACAO_MSG_ERRO.textContent = '';
